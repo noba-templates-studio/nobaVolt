@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores de la marca Noba -->
+    <color name="noba_negro">#FF0A0A0A</color>
+    <color name="noba_blanco">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!-- Fondo del icono de la app (monograma) -->
+    <color name="ic_launcher_fondo">#FF000000</color>
+</resources>

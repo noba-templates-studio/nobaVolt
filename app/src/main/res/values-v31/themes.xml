@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: la pantalla de carga del sistema queda en negro y sin icono,
+         para que el monograma aparezca solo con la intro animada -->
+    <style name="Theme.ElectroManager.Arranque" parent="Theme.ElectroManager">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowSplashScreenBackground">@color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/intro_vacio</item>
+    </style>
+</resources>

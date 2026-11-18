@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base: fondo blanco desde el primer fotograma para evitar parpadeos al abrir -->
+    <style name="Theme.ElectroManager" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/noba_blanco</item>
+        <item name="android:colorBackground">@color/noba_blanco</item>
+    </style>
+
+    <!-- Ventana de arranque: negra para enlazar sin saltos con la intro animada -->
+    <style name="Theme.ElectroManager.Arranque" parent="Theme.ElectroManager">
+        <item name="android:windowBackground">@color/black</item>
+    </style>
+</resources>
