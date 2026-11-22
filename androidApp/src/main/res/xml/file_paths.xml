@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- PDF y copias de seguridad que se comparten con otras apps -->
+    <cache-path name="compartidos" path="compartidos/" />
+</paths>

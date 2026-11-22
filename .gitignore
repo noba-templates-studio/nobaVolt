@@ -1,32 +1,24 @@
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-
-# Gradle / Android Studio
-.gradle/
 .kotlin/
-build/
-.idea/
-*.iml
+.gradle/
+**/build/
+xcuserdata/
+!src/**/build/
 local.properties
-.cxx/
+.idea/
+.DS_Store
 captures/
+.externalNativeBuild/
+.cxx/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
 
 # Firma y compilados: NUNCA en GitHub
 *.jks
 *.keystore
 *.apk
 *.aab
-app/release/

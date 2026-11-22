@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Modo oscuro: fondo negro desde el primer fotograma -->
+    <style name="Theme.NobaVolt" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/noba_negro</item>
+        <item name="android:colorBackground">@color/noba_negro</item>
+    </style>
+</resources>
