@@ -1,4 +1,5 @@
 # Compila la app para Android y para iOS en los servidores de GitHub en cada cambio.
+# El APK de prueba de Android se puede descargar desde la pestaña "Actions" (sección Artifacts).
 name: Compilar
 
 on:
@@ -26,58 +27,10 @@ jobs:
           name: noba-volt-android-debug
           path: androidApp/build/outputs/apk/debug/*.apk
 
-  android-emulador:
-    name: Android (emulador)
-    needs: android
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Activar KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - uses: actions/download-artifact@v4
-        with:
-          name: noba-volt-android-debug
-          path: apk
-      - name: Abrir en el emulador y hacer capturas
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          disable-animations: false
-          script: |
-            mkdir -p revision
-            adb install -r apk/*.apk
-            adb shell screenrecord --time-limit 8 /sdcard/intro.mp4 &
-            sleep 1
-            adb shell am start -W -n com.noba.volt/.MainActivity
-            sleep 9
-            adb pull /sdcard/intro.mp4 revision/intro_android.mp4 || true
-            adb exec-out screencap -p > revision/android_inicio.png
-            adb logcat -d -s AndroidRuntime:E > revision/errores_android.txt || true
-      - name: Publicar revisión en la rama revision-ci-android
-        if: always() && github.event_name == 'push'
-        run: |
-          mkdir -p revision && cp -r revision /tmp/revision
-          cd /tmp/revision
-          git init -q -b revision-ci-android
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git add -A
-          git commit -q --allow-empty -m "Revisión Android de ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" revision-ci-android
-
   ios:
     name: iOS
     runs-on: macos-latest
     timeout-minutes: 45
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -87,61 +40,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Versión de Xcode
         run: xcodebuild -version
-      - name: Compilar código Kotlin para iOS
-        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 --stacktrace
-      - name: PDF de prueba
-        run: |
-          ./gradlew :shared:iosSimulatorArm64Test --stacktrace
-          mkdir -p revision
-          F=$(find ~/Library/Developer/CoreSimulator /private/var/folders /tmp -name prueba_noba.pdf 2>/dev/null | head -1)
-          echo "PDF encontrado en: $F"
-          if [ -n "$F" ]; then cp "$F" revision/; fi
+      - name: Compilar código Kotlin y probar el PDF
+        run: ./gradlew :shared:iosSimulatorArm64Test --stacktrace
       - name: Compilar app iOS (simulador)
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp \
             -configuration Debug -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build/ios \
             CODE_SIGNING_ALLOWED=NO build
-      - name: Abrir en el simulador y hacer capturas
-        run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for k,v in sorted(d.items(), reverse=True) if "iOS" in k for x in v if x["name"].startswith("iPhone") and "Pro" in x["name"]))')
-          echo "Simulador: $UDID"
-          xcrun simctl boot "$UDID"
-          xcrun simctl bootstatus "$UDID" -b
-          xcrun simctl install "$UDID" build/ios/Build/Products/Debug-iphonesimulator/NobaVolt.app
-          sleep 5
-          # Vídeo del primer arranque para revisar la intro animada
-          # (perl restaura SIGINT, que los procesos en segundo plano de un script ignoran)
-          perl -e '$SIG{INT}="DEFAULT"; exec @ARGV' xcrun simctl io "$UDID" recordVideo --codec=h264 --force revision/intro_ios.mov &
-          GRAB=$!
-          sleep 3
-          xcrun simctl launch "$UDID" com.noba.volt
-          sleep 6
-          kill -INT $GRAB
-          for i in $(seq 1 20); do kill -0 $GRAB 2>/dev/null || break; sleep 1; done
-          kill -9 $GRAB 2>/dev/null || true
-          xcrun simctl io "$UDID" screenshot revision/3_inicio.png
-          xcrun simctl terminate "$UDID" com.noba.volt
-          xcrun simctl ui "$UDID" appearance dark
-          sleep 2
-          xcrun simctl launch "$UDID" com.noba.volt
-          sleep 5;   xcrun simctl io "$UDID" screenshot revision/4_inicio_oscuro.png
-          xcrun simctl spawn "$UDID" log show --last 2m --predicate 'process == "NobaVolt"' --style compact > revision/registro.txt 2>&1 || true
-      - name: Guardar capturas y PDF
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: noba-volt-ios-revision
-          path: revision/
-      - name: Publicar revisión en la rama revision-ci
-        if: always() && github.event_name == 'push'
-        run: |
-          cp -r revision /tmp/revision
-          cd /tmp/revision
-          git init -q -b revision-ci
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Revisión automática de ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" revision-ci
