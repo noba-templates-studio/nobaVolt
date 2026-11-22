@@ -75,6 +75,7 @@ jobs:
   ios:
     name: iOS
     runs-on: macos-latest
+    timeout-minutes: 45
     permissions:
       contents: write
     steps:
@@ -111,12 +112,15 @@ jobs:
           xcrun simctl install "$UDID" build/ios/Build/Products/Debug-iphonesimulator/NobaVolt.app
           sleep 5
           # Vídeo del primer arranque para revisar la intro animada
-          xcrun simctl io "$UDID" recordVideo --codec=h264 --force revision/intro_ios.mov &
+          # (perl restaura SIGINT, que los procesos en segundo plano de un script ignoran)
+          perl -e '$SIG{INT}="DEFAULT"; exec @ARGV' xcrun simctl io "$UDID" recordVideo --codec=h264 --force revision/intro_ios.mov &
           GRAB=$!
           sleep 3
           xcrun simctl launch "$UDID" com.noba.volt
           sleep 6
-          kill -INT $GRAB; wait $GRAB || true
+          kill -INT $GRAB
+          for i in $(seq 1 20); do kill -0 $GRAB 2>/dev/null || break; sleep 1; done
+          kill -9 $GRAB 2>/dev/null || true
           xcrun simctl io "$UDID" screenshot revision/3_inicio.png
           xcrun simctl terminate "$UDID" com.noba.volt
           xcrun simctl ui "$UDID" appearance dark
