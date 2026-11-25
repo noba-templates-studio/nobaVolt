@@ -16,8 +16,23 @@ android {
         versionName = "1.1.0"
     }
 
+    // Firma de la versión release: se lee de variables de entorno (en GitHub, de los "Secrets"),
+    // así la llave y sus contraseñas nunca están en el código.
+    val llave = System.getenv("NOBA_KEYSTORE_FILE")?.let { file(it) }?.takeIf { it.exists() }
+    if (llave != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = llave
+                storePassword = System.getenv("NOBA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("NOBA_KEY_ALIAS")
+                keyPassword = System.getenv("NOBA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (llave != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
