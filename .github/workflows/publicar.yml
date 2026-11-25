@@ -1,5 +1,5 @@
-# Publica el APK de Android en "Releases" al crear una etiqueta de versión (p. ej. v1.1.0)
-# o al lanzarlo a mano desde la pestaña Actions.
+# Publica el APK de Android en "Releases" al crear una etiqueta de versión (p. ej. v1.1.0),
+# al subir cambios a la rama "publicar" o al lanzarlo a mano desde la pestaña Actions.
 #
 # Si en Settings → Secrets and variables → Actions existen estos secretos, el APK sale firmado
 # con vuestra llave de publicación (versión release, la que se actualiza sobre la app instalada):
@@ -11,6 +11,7 @@ name: Publicar
 on:
   push:
     tags: ["v*"]
+    branches: [publicar]
   workflow_dispatch:
 
 permissions:
@@ -61,7 +62,8 @@ jobs:
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             ETIQUETA="${GITHUB_REF_NAME}"
           else
-            ETIQUETA="prueba-${GITHUB_SHA::7}"
+            VERSION=$(grep -o 'versionName = "[^"]*"' androidApp/build.gradle.kts | cut -d'"' -f2)
+            ETIQUETA="v${VERSION}-${GITHUB_SHA::7}"
           fi
           if [ "$TIPO" = "release" ]; then
             NOTAS="APK de Noba Volt firmado con la llave de publicación. Se instala o actualiza sobre la versión anterior."
